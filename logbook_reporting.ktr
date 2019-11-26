@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <transformation>
   <info>
-    <name>month_dimension</name>
+    <name>logbook_reporting</name>
     <description/>
     <extended_description/>
     <trans_version/>
@@ -428,65 +428,14 @@
     <clusterschemas>
     </clusterschemas>
     <created_user>-</created_user>
-    <created_date>2019/11/24 21:03:47.883</created_date>
+    <created_date>2019/11/26 09:37:21.341</created_date>
     <modified_user>-</modified_user>
-    <modified_date>2019/11/24 21:03:47.883</modified_date>
+    <modified_date>2019/11/26 09:37:21.341</modified_date>
     <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
   <notepads>
   </notepads>
-  <connection>
-    <name>AIMS</name>
-    <server>postgresfib.fib.upc.edu</server>
-    <type>POSTGRESQL</type>
-    <access>Native</access>
-    <database>AIMS</database>
-    <port>6433</port>
-    <username>ricard.monge.calvo</username>
-    <password>Encrypted 2be98afc86aa7f2e48f3bfc288ecbf68e</password>
-    <servername/>
-    <data_tablespace/>
-    <index_tablespace/>
-    <attributes>
-      <attribute>
-        <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>FORCE_IDENTIFIERS_TO_UPPERCASE</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>IS_CLUSTERED</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>PORT_NUMBER</code>
-        <attribute>6433</attribute>
-      </attribute>
-      <attribute>
-        <code>PRESERVE_RESERVED_WORD_CASE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>QUOTE_ALL_FIELDS</code>
-        <attribute>N</attribute>
-      </attribute>
-      <attribute>
-        <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>SUPPORTS_TIMESTAMP_DATA_TYPE</code>
-        <attribute>Y</attribute>
-      </attribute>
-      <attribute>
-        <code>USE_POOLING</code>
-        <attribute>N</attribute>
-      </attribute>
-    </attributes>
-  </connection>
   <connection>
     <name>AMOS</name>
     <server>postgresfib.fib.upc.edu</server>
@@ -595,69 +544,33 @@
   </connection>
   <order>
     <hop>
-      <from>aims_dates</from>
-      <to>append_sort_remove_duplicates</to>
+      <from>check_aircraft_dim</from>
+      <to>check_month_dim</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>select_and_cast</from>
-      <to>insert_update_month</to>
+      <from>get_logbook_orders</from>
+      <to>check_aircraft_dim</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>amos_dates</from>
-      <to>append_sort_remove_duplicates</to>
+      <from>check_month_dim</from>
+      <to>check_person_dim</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>append_sort_remove_duplicates</from>
-      <to>pad_month</to>
+      <from>check_person_dim</from>
+      <to>remove_cols</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>pad_month</from>
-      <to>select_and_cast</to>
+      <from>remove_cols</from>
+      <to>insert_update_logbooks</to>
       <enabled>Y</enabled>
     </hop>
   </order>
   <step>
-    <name>aims_dates</name>
-    <type>TableInput</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>AIMS</connection>
-    <sql>SELECT DISTINCT
-	TO_CHAR(scheduleddeparture, 'yyyymm') as ID
-	, DATE_PART('year',scheduleddeparture) AS Y	
-FROM flights
-</sql>
-    <limit>0</limit>
-    <lookup/>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>N</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>176</xloc>
-      <yloc>224</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>amos_dates</name>
+    <name>get_logbook_orders</name>
     <type>TableInput</type>
     <description/>
     <distribute>Y</distribute>
@@ -668,15 +581,19 @@ FROM flights
       <schema_name/>
     </partitioning>
     <connection>AMOS</connection>
-    <sql>SELECT DISTINCT
-	TO_CHAR(reportingDate, 'yyyymm') as ID
-	, DATE_PART('year',reportingDate) AS Y
-FROM technicallogbookorders
-UNION
-SELECT DISTINCT
-	TO_CHAR(departure, 'yyyymm') as ID
-	, DATE_PART('year',departure) AS Y
-FROM operationinterruption</sql>
+    <sql>SELECT T.aircraftID, T.monthID, T.personID, COUNT(1) AS Counter
+FROM (
+	SELECT
+		aircraftregistration AS aircraftID
+		, CONCAT(
+			CAST(reporteurclass AS CHAR),'-',
+			LPAD(CAST(reporteurid AS VARCHAR),4,'0')
+		) AS personID
+		, TO_CHAR(reportingdate, ' yyyymm') as monthID
+	FROM technicallogbookorders
+) T
+GROUP BY T.aircraftID, T.monthID, T.personID
+ORDER BY T.aircraftID, T.monthID, T.personID</sql>
     <limit>0</limit>
     <lookup/>
     <execute_each_row>N</execute_each_row>
@@ -691,103 +608,13 @@ FROM operationinterruption</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>176</xloc>
-      <yloc>128</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>append_sort_remove_duplicates</name>
-    <type>SortRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <directory>%%java.io.tmpdir%%</directory>
-    <prefix>out</prefix>
-    <sort_size>1000000</sort_size>
-    <free_memory/>
-    <compress>N</compress>
-    <compress_variable/>
-    <unique_rows>Y</unique_rows>
-    <fields>
-      <field>
-        <name>id</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-    </fields>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>384</xloc>
+      <xloc>192</xloc>
       <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>insert_update_month</name>
-    <type>InsertUpdate</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <connection>OraBD</connection>
-    <commit>100</commit>
-    <update_bypassed>N</update_bypassed>
-    <lookup>
-      <schema/>
-      <table>MONTHS</table>
-      <key>
-        <name>id</name>
-        <field>id</field>
-        <condition>=</condition>
-        <name2/>
-      </key>
-      <value>
-        <name>id</name>
-        <rename>id</rename>
-        <update>N</update>
-      </value>
-      <value>
-        <name>y</name>
-        <rename>y</rename>
-        <update>Y</update>
-      </value>
-    </lookup>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>928</xloc>
-      <yloc>176</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>select_and_cast</name>
+    <name>remove_cols</name>
     <type>SelectValues</type>
     <description/>
     <distribute>Y</distribute>
@@ -798,10 +625,43 @@ FROM operationinterruption</sql>
       <schema_name/>
     </partitioning>
     <fields>
+      <field>
+        <name>aircraftid</name>
+        <rename/>
+      </field>
+      <field>
+        <name>monthid</name>
+        <rename/>
+      </field>
+      <field>
+        <name>personid</name>
+        <rename/>
+      </field>
+      <field>
+        <name>counter</name>
+        <rename/>
+      </field>
       <select_unspecified>N</select_unspecified>
       <meta>
-        <name>id</name>
-        <rename>id</rename>
+        <name>aircraftid</name>
+        <rename>aircraftid</rename>
+        <type>String</type>
+        <length>6</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+      <meta>
+        <name>monthid</name>
+        <rename>monthid</rename>
         <type>String</type>
         <length>7</length>
         <precision>-2</precision>
@@ -817,11 +677,28 @@ FROM operationinterruption</sql>
         <storage_type/>
       </meta>
       <meta>
-        <name>y</name>
-        <rename>y</rename>
+        <name>personid</name>
+        <rename>personid</rename>
+        <type>String</type>
+        <length>6</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+      <meta>
+        <name>counter</name>
+        <rename>counter</rename>
         <type>Number</type>
         <length>22</length>
-        <precision>4</precision>
+        <precision>2</precision>
         <conversion_mask/>
         <date_format_lenient>false</date_format_lenient>
         <date_format_locale/>
@@ -843,14 +720,14 @@ FROM operationinterruption</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>736</xloc>
+      <xloc>832</xloc>
       <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>pad_month</name>
-    <type>StringOperations</type>
+    <name>insert_update_logbooks</name>
+    <type>InsertUpdate</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -859,21 +736,51 @@ FROM operationinterruption</sql>
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <fields>
-      <field>
-        <in_stream_name>id</in_stream_name>
-        <out_stream_name/>
-        <trim_type>none</trim_type>
-        <lower_upper>none</lower_upper>
-        <padding_type>left</padding_type>
-        <pad_char> </pad_char>
-        <pad_len>7</pad_len>
-        <init_cap>no</init_cap>
-        <mask_xml>none</mask_xml>
-        <digits>none</digits>
-        <remove_special_characters>none</remove_special_characters>
-      </field>
-    </fields>
+    <connection>OraBD</connection>
+    <commit>100</commit>
+    <update_bypassed>N</update_bypassed>
+    <lookup>
+      <schema/>
+      <table>LOGBOOKREPORTING</table>
+      <key>
+        <name>aircraftid</name>
+        <field>aircraftid</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>monthid</name>
+        <field>monthid</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
+        <name>personid</name>
+        <field>personid</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>AIRCRAFTID</name>
+        <rename>aircraftid</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>MONTHID</name>
+        <rename>monthid</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>PERSONID</name>
+        <rename>personid</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>COUNTER</name>
+        <rename>counter</rename>
+        <update>Y</update>
+      </value>
+    </lookup>
     <attributes/>
     <cluster_schema/>
     <remotesteps>
@@ -883,7 +790,151 @@ FROM operationinterruption</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>592</xloc>
+      <xloc>1008</xloc>
+      <yloc>176</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>check_aircraft_dim</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>OraBD</connection>
+    <cache>Y</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>AIRCRAFTDIMENSION</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>aircraftid</name>
+        <field>ID</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>ID</name>
+        <rename>ID_aircraft</rename>
+        <default/>
+        <type>String</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>368</xloc>
+      <yloc>176</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>check_month_dim</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>OraBD</connection>
+    <cache>Y</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>MONTHS</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>monthid</name>
+        <field>ID</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>ID</name>
+        <rename>ID_month</rename>
+        <default/>
+        <type>None</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>528</xloc>
+      <yloc>176</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>check_person_dim</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>OraBD</connection>
+    <cache>Y</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>PEOPLEDIMENSION</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>personid</name>
+        <field>ID</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>ID</name>
+        <rename>ID_person</rename>
+        <default/>
+        <type>String</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>688</xloc>
       <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>

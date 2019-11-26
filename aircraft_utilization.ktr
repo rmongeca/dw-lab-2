@@ -6,6 +6,7 @@
     <extended_description/>
     <trans_version/>
     <trans_type>Normal</trans_type>
+    <trans_status>0</trans_status>
     <directory>/</directory>
     <parameters>
     </parameters>
@@ -430,7 +431,7 @@
     <created_date>2019/11/26 09:37:21.341</created_date>
     <modified_user>-</modified_user>
     <modified_date>2019/11/26 09:37:21.341</modified_date>
-    <key_for_session_key/>
+    <key_for_session_key>H4sIAAAAAAAAAAMAAAAAAAAAAAA=</key_for_session_key>
     <is_key_private>N</is_key_private>
   </info>
   <notepads>
@@ -537,86 +538,121 @@
       </attribute>
     </attributes>
   </connection>
+  <connection>
+    <name>OraBD</name>
+    <server>oraclefib.fib.upc.edu</server>
+    <type>ORACLE</type>
+    <access>Native</access>
+    <database>OraBD</database>
+    <port>1521</port>
+    <username>ricard.monge.calvo</username>
+    <password>Encrypted 2be98afc86aa7f2e48f3bfc288ecbf68e</password>
+    <servername/>
+    <data_tablespace/>
+    <index_tablespace/>
+    <attributes>
+      <attribute>
+        <code>FORCE_IDENTIFIERS_TO_LOWERCASE</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>FORCE_IDENTIFIERS_TO_UPPERCASE</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>IS_CLUSTERED</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>PORT_NUMBER</code>
+        <attribute>1521</attribute>
+      </attribute>
+      <attribute>
+        <code>PRESERVE_RESERVED_WORD_CASE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>QUOTE_ALL_FIELDS</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>STRICT_NUMBER_38_INTERPRETATION</code>
+        <attribute>N</attribute>
+      </attribute>
+      <attribute>
+        <code>SUPPORTS_BOOLEAN_DATA_TYPE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>SUPPORTS_TIMESTAMP_DATA_TYPE</code>
+        <attribute>Y</attribute>
+      </attribute>
+      <attribute>
+        <code>USE_POOLING</code>
+        <attribute>N</attribute>
+      </attribute>
+    </attributes>
+  </connection>
   <order>
     <hop>
-      <from>get_operation_interruption</from>
-      <to>Sort rows 2</to>
+      <from>sort_to_group</from>
+      <to>group_aircraft_time</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>get_maintenances</from>
-      <to>Sort rows</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Sort rows</from>
-      <to>Merge join</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Sort rows 2</from>
-      <to>Merge join</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Merge join</from>
-      <to>Select values</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Select values</from>
-      <to>Sort rows 3</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Sort rows 5</from>
-      <to>Group by</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Sort rows 4</from>
-      <to>Group by 2</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Group by 2</from>
-      <to>Merge join 2</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Group by</from>
-      <to>Merge join 2</to>
-      <enabled>Y</enabled>
-    </hop>
-    <hop>
-      <from>Merge join 2</from>
-      <to>Dummy (do nothing)</to>
+      <from>turn_null_0</from>
+      <to>sort_to_group</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
       <from>get_flights</from>
-      <to>Filter rows</to>
+      <to>add_delays_to_flights</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Filter rows</from>
-      <to>Sort rows 4</to>
+      <from>group_aircraft_time</from>
+      <to>round_decimals</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>get_operation_interruption</from>
-      <to>Filter rows 2</to>
+      <from>round_decimals</from>
+      <to>swap_rounded</to>
       <enabled>Y</enabled>
     </hop>
     <hop>
-      <from>Filter rows 2</from>
-      <to>Sort rows 5</to>
+      <from>swap_rounded</from>
+      <to>insert_update_aircrafts</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>check_aircraft_dim</from>
+      <to>check_time_dim</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>check_time_dim</from>
+      <to>remove_cols</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>remove_cols</from>
+      <to>turn_null_0</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>add_delays_to_flights</from>
+      <to>check_aircraft_dim</to>
+      <enabled>Y</enabled>
+    </hop>
+    <hop>
+      <from>get_oper_interrupts</from>
+      <to>add_delays_to_flights</to>
       <enabled>Y</enabled>
     </hop>
   </order>
   <step>
-    <name>get_flights</name>
-    <type>TableInput</type>
+    <name>add_delays_to_flights</name>
+    <type>MergeJoin</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -625,39 +661,162 @@
       <method>none</method>
       <schema_name/>
     </partitioning>
+    <join_type>LEFT OUTER</join_type>
+    <step1>get_flights</step1>
+    <step2>get_oper_interrupts</step2>
+    <keys_1>
+      <key>aircraftid</key>
+      <key>timeid</key>
+      <key>delaycode</key>
+    </keys_1>
+    <keys_2>
+      <key>aircraftid</key>
+      <key>timeid</key>
+      <key>delaycode</key>
+    </keys_2>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>304</xloc>
+      <yloc>176</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>check_aircraft_dim</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>OraBD</connection>
+    <cache>Y</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>AIRCRAFTDIMENSION</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>aircraftid</name>
+        <field>ID</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>ID</name>
+        <rename>ID_aircraft</rename>
+        <default/>
+        <type>String</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>480</xloc>
+      <yloc>176</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>check_time_dim</name>
+    <type>DBLookup</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <connection>OraBD</connection>
+    <cache>Y</cache>
+    <cache_load_all>N</cache_load_all>
+    <cache_size>0</cache_size>
+    <lookup>
+      <schema/>
+      <table>TEMPORALDIMENSION</table>
+      <orderby/>
+      <fail_on_multiple>N</fail_on_multiple>
+      <eat_row_on_failure>Y</eat_row_on_failure>
+      <key>
+        <name>timeid</name>
+        <field>ID</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>ID</name>
+        <rename>ID_time</rename>
+        <default/>
+        <type>None</type>
+      </value>
+    </lookup>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>624</xloc>
+      <yloc>176</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>get_flights</name>
+    <type>TableInput</type>
+    <description/>
+    <distribute>N</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
     <connection>AIMS</connection>
-    <sql>SELECT
-  aircraftregistration AS aircraftID
-, flightId
-, scheduleddeparture
-, CAST(scheduleddeparture AS DATE) AS timeID
-, actualarrival - actualdeparture AS flightHours
-, CASE WHEN cancelled='Y' THEN 1 ELSE 0 END AS cancellations
-, CASE WHEN delaycode IS NOT NULL THEN 1 ELSE 0 END AS delays
-, delaycode
-, EXTRACT(HOUR FROM
-	CASE
-		WHEN delaycode IS NOT NULL
-			THEN actualdeparture - scheduleddeparture
-		ELSE scheduleddeparture - scheduleddeparture
-	END
-	)*60
-	+ EXTRACT(MINUTE FROM
-	CASE
-		WHEN delaycode IS NOT NULL
-			THEN actualdeparture - scheduleddeparture
-		ELSE scheduleddeparture - scheduleddeparture
-	END
-	) 
-	+ EXTRACT(SECOND FROM
-	CASE
-		WHEN delaycode IS NOT NULL
-			THEN actualdeparture - scheduleddeparture
-		ELSE scheduleddeparture - scheduleddeparture
-	END)/60
-AS delayedMinutes
-FROM flights
-</sql>
+    <sql>SELECT T.*
+FROM (
+	SELECT
+		aircraftregistration AS aircraftID
+		, scheduleddeparture, scheduledArrival, actualdeparture, actualarrival
+		, CAST(scheduleddeparture AS DATE) AS timeID
+		, delaycode
+		, CASE
+			WHEN cancelled='Y' THEN 0
+			ELSE 
+				EXTRACT(HOUR FROM actualarrival - actualdeparture)
+				+ EXTRACT(MINUTE FROM actualarrival - actualdeparture)/60
+				+ EXTRACT(SECOND FROM actualarrival - actualdeparture)/3600
+			END AS flightHours
+		, CASE WHEN cancelled='Y' THEN 0 ELSE 1 END AS flightCycles
+		, CASE WHEN cancelled='Y' THEN 1 ELSE 0 END AS cancellations
+		, CASE WHEN delaycode IS NOT NULL THEN 1 ELSE 0 END AS delays
+	FROM flights
+	WHERE scheduledArrival > scheduleddeparture AND actualarrival > actualdeparture
+) AS T
+ORDER BY T.aircraftID, T.timeID, T.delaycode</sql>
     <limit>0</limit>
     <lookup/>
     <execute_each_row>N</execute_each_row>
@@ -672,13 +831,13 @@ FROM flights
       </output>
     </remotesteps>
     <GUI>
-      <xloc>176</xloc>
-      <yloc>32</yloc>
+      <xloc>96</xloc>
+      <yloc>112</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>get_operation_interruption</name>
+    <name>get_oper_interrupts</name>
     <type>TableInput</type>
     <description/>
     <distribute>N</distribute>
@@ -690,17 +849,29 @@ FROM flights
     </partitioning>
     <connection>AMOS</connection>
     <sql>SELECT
-  aircraftregistration
-, starttime
-, departure
-, delaycode
-, EXTRACT(HOUR FROM duration)*60 
-	+ EXTRACT(MINUTES FROM duration)
-	+ EXTRACT(SECONDS FROM duration)/60
- AS duration
-, kind
-FROM operationinterruption
-</sql>
+	T.aircraftID, T.timeID, T.delaycode
+	, CASE WHEN (delaycode IS NOT NULL AND NOT kind IN ('Revision','Safety'))
+			THEN (
+				EXTRACT(HOUR FROM duration)*60 
+				+ EXTRACT(MINUTE FROM duration) 
+				+ EXTRACT(SECOND FROM duration)/60
+			)
+		ELSE 0
+		END AS delayedMinutes
+	, CASE WHEN T.kind IN ('Maintenance','Revision') THEN 1 ELSE 0 END AS scheduled
+	, CASE WHEN T.kind IN ('Delay', 'Safety', 'AircraftOnGround') THEN 1 ELSE 0 END AS unscheduled
+FROM (
+	SELECT
+	  aircraftregistration AS aircraftID
+	, CAST(departure AS DATE) AS timeID
+	, kind
+	, delaycode
+	, SUM(duration) AS duration
+	FROM operationinterruption
+	WHERE delaycode IS NOT NULL
+	GROUP BY aircraftID, timeID, kind, delaycode
+) AS T
+ORDER BY T.aircraftID, T.timeID, T.delaycode</sql>
     <limit>0</limit>
     <lookup/>
     <execute_each_row>N</execute_each_row>
@@ -715,14 +886,14 @@ FROM operationinterruption
       </output>
     </remotesteps>
     <GUI>
-      <xloc>176</xloc>
-      <yloc>288</yloc>
+      <xloc>96</xloc>
+      <yloc>240</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>get_maintenances</name>
-    <type>TableInput</type>
+    <name>group_aircraft_time</name>
+    <type>GroupBy</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -731,112 +902,64 @@ FROM operationinterruption
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <connection>AIMS</connection>
-    <sql>SELECT
-  aircraftregistration
-, scheduleddeparture
-, CAST(scheduleddeparture AS DATE) AS timeID
-, CASE WHEN programmed='Y' THEN 1 ELSE 0 END AS scheduled
-FROM maintenance</sql>
-    <limit>0</limit>
-    <lookup/>
-    <execute_each_row>N</execute_each_row>
-    <variables_active>N</variables_active>
-    <lazy_conversion_active>N</lazy_conversion_active>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>176</xloc>
-      <yloc>368</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Merge join</name>
-    <type>MergeJoin</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <join_type>INNER</join_type>
-    <step1>Sort rows</step1>
-    <step2>Sort rows 2</step2>
-    <keys_1>
-      <key>aircraftregistration</key>
-      <key>scheduleddeparture</key>
-      <key>timeid</key>
-    </keys_1>
-    <keys_2>
-      <key>aircraftregistration</key>
-      <key>starttime</key>
-      <key>departure</key>
-    </keys_2>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>528</xloc>
-      <yloc>320</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Sort rows</name>
-    <type>SortRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
+    <all_rows>N</all_rows>
+    <ignore_aggregate>N</ignore_aggregate>
+    <field_ignore/>
     <directory>%%java.io.tmpdir%%</directory>
-    <prefix>out</prefix>
-    <sort_size>1000000</sort_size>
-    <free_memory/>
-    <compress>N</compress>
-    <compress_variable/>
-    <unique_rows>N</unique_rows>
-    <fields>
+    <prefix>grp</prefix>
+    <add_linenr>N</add_linenr>
+    <linenr_fieldname/>
+    <give_back_row>N</give_back_row>
+    <group>
       <field>
-        <name>aircraftregistration</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-      <field>
-        <name>scheduleddeparture</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
+        <name>aircraftid</name>
       </field>
       <field>
         <name>timeid</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
+      </field>
+    </group>
+    <fields>
+      <field>
+        <aggregate>scheduledOutOfService</aggregate>
+        <subject>scheduledOutOfService</subject>
+        <type>SUM</type>
+        <valuefield/>
+      </field>
+      <field>
+        <aggregate>unScheduledOutOfService</aggregate>
+        <subject>unScheduledOutOfService</subject>
+        <type>SUM</type>
+        <valuefield/>
+      </field>
+      <field>
+        <aggregate>flighthours</aggregate>
+        <subject>flighthours</subject>
+        <type>SUM</type>
+        <valuefield/>
+      </field>
+      <field>
+        <aggregate>flightcycles</aggregate>
+        <subject>flightcycles</subject>
+        <type>SUM</type>
+        <valuefield/>
+      </field>
+      <field>
+        <aggregate>delays</aggregate>
+        <subject>delays</subject>
+        <type>SUM</type>
+        <valuefield/>
+      </field>
+      <field>
+        <aggregate>delayedminutes</aggregate>
+        <subject>delayedminutes</subject>
+        <type>SUM</type>
+        <valuefield/>
+      </field>
+      <field>
+        <aggregate>cancellations</aggregate>
+        <subject>cancellations</subject>
+        <type>SUM</type>
+        <valuefield/>
       </field>
     </fields>
     <attributes/>
@@ -848,14 +971,14 @@ FROM maintenance</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>352</xloc>
-      <yloc>368</yloc>
+      <xloc>1120</xloc>
+      <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>Sort rows 2</name>
-    <type>SortRows</type>
+    <name>insert_update_aircrafts</name>
+    <type>InsertUpdate</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -864,97 +987,70 @@ FROM maintenance</sql>
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <directory>%%java.io.tmpdir%%</directory>
-    <prefix>out</prefix>
-    <sort_size>1000000</sort_size>
-    <free_memory/>
-    <compress>N</compress>
-    <compress_variable/>
-    <unique_rows>N</unique_rows>
-    <fields>
-      <field>
-        <name>aircraftregistration</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-      <field>
-        <name>starttime</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-      <field>
-        <name>departure</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-    </fields>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>352</xloc>
-      <yloc>288</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Sort rows 3</name>
-    <type>SortRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <directory>%%java.io.tmpdir%%</directory>
-    <prefix>out</prefix>
-    <sort_size>1000000</sort_size>
-    <free_memory/>
-    <compress>N</compress>
-    <compress_variable/>
-    <unique_rows>Y</unique_rows>
-    <fields>
-      <field>
-        <name>aircraftID</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-      <field>
+    <connection>OraBD</connection>
+    <commit>100</commit>
+    <update_bypassed>N</update_bypassed>
+    <lookup>
+      <schema/>
+      <table>AIRCRAFTUTILIZATION</table>
+      <key>
+        <name>aircraftid</name>
+        <field>aircraftid</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <key>
         <name>timeid</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-      <field>
-        <name>scheduled</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-    </fields>
+        <field>timeid</field>
+        <condition>=</condition>
+        <name2/>
+      </key>
+      <value>
+        <name>AIRCRAFTID</name>
+        <rename>aircraftid</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>TIMEID</name>
+        <rename>timeid</rename>
+        <update>N</update>
+      </value>
+      <value>
+        <name>SCHEDULEDOUTOFSERVICE</name>
+        <rename>scheduledOutOfService</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>UNSCHEDULEDOUTOFSERVICE</name>
+        <rename>unScheduledOutOfService</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>FLIGHTHOURS</name>
+        <rename>flighthours</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>FLIGHTCYCLES</name>
+        <rename>flightcycles</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>DELAYS</name>
+        <rename>delays</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>DELAYEDMINUTES</name>
+        <rename>delayedminutes</rename>
+        <update>Y</update>
+      </value>
+      <value>
+        <name>CANCELLATIONS</name>
+        <rename>cancellations</rename>
+        <update>Y</update>
+      </value>
+    </lookup>
     <attributes/>
     <cluster_schema/>
     <remotesteps>
@@ -964,13 +1060,13 @@ FROM maintenance</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>752</xloc>
-      <yloc>320</yloc>
+      <xloc>1568</xloc>
+      <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>Select values</name>
+    <name>remove_cols</name>
     <type>SelectValues</type>
     <description/>
     <distribute>Y</distribute>
@@ -981,28 +1077,43 @@ FROM maintenance</sql>
       <schema_name/>
     </partitioning>
     <fields>
+      <field>
+        <name>aircraftid</name>
+        <length>-2</length>
+        <precision>6</precision>
+      </field>
+      <field>
+        <name>timeid</name>
+        <length>-2</length>
+        <precision>7</precision>
+      </field>
+      <field>
+        <name>scheduled</name>
+        <rename>scheduledOutOfService</rename>
+      </field>
+      <field>
+        <name>unscheduled</name>
+        <rename>unScheduledOutOfService</rename>
+      </field>
+      <field>
+        <name>flighthours</name>
+      </field>
+      <field>
+        <name>flightcycles</name>
+      </field>
+      <field>
+        <name>delays</name>
+      </field>
+      <field>
+        <name>delayedMinutes</name>
+      </field>
+      <field>
+        <name>cancellations</name>
+      </field>
       <select_unspecified>N</select_unspecified>
-      <remove>
-        <name>scheduleddeparture</name>
-      </remove>
-      <remove>
-        <name>aircraftregistration_1</name>
-      </remove>
-      <remove>
-        <name>starttime</name>
-      </remove>
-      <remove>
-        <name>departure</name>
-      </remove>
-      <remove>
-        <name>delaycode</name>
-      </remove>
-      <remove>
-        <name>kind</name>
-      </remove>
       <meta>
-        <name>aircraftregistration</name>
-        <rename>aircraftID</rename>
+        <name>aircraftid</name>
+        <rename>aircraftid</rename>
         <type>String</type>
         <length>6</length>
         <precision>-2</precision>
@@ -1021,41 +1132,7 @@ FROM maintenance</sql>
         <name>timeid</name>
         <rename>timeid</rename>
         <type>Date</type>
-        <length>-2</length>
-        <precision>-2</precision>
-        <conversion_mask/>
-        <date_format_lenient>false</date_format_lenient>
-        <date_format_locale/>
-        <date_format_timezone/>
-        <lenient_string_to_number>false</lenient_string_to_number>
-        <encoding/>
-        <decimal_symbol/>
-        <grouping_symbol/>
-        <currency_symbol/>
-        <storage_type/>
-      </meta>
-      <meta>
-        <name>scheduled</name>
-        <rename>scheduled</rename>
-        <type>Number</type>
-        <length>1</length>
-        <precision>0</precision>
-        <conversion_mask/>
-        <date_format_lenient>false</date_format_lenient>
-        <date_format_locale/>
-        <date_format_timezone/>
-        <lenient_string_to_number>false</lenient_string_to_number>
-        <encoding/>
-        <decimal_symbol/>
-        <grouping_symbol/>
-        <currency_symbol/>
-        <storage_type/>
-      </meta>
-      <meta>
-        <name>duration</name>
-        <rename>duration</rename>
-        <type>None</type>
-        <length>-2</length>
+        <length>7</length>
         <precision>-2</precision>
         <conversion_mask/>
         <date_format_lenient>false</date_format_lenient>
@@ -1078,13 +1155,69 @@ FROM maintenance</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>640</xloc>
-      <yloc>320</yloc>
+      <xloc>752</xloc>
+      <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>Sort rows 4</name>
+    <name>round_decimals</name>
+    <type>Calculator</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <failIfNoFile>Y</failIfNoFile>
+    <calculation>
+      <field_name>flighthours</field_name>
+      <calc_type>ROUND_STD_1</calc_type>
+      <field_a>flighthours</field_a>
+      <field_b/>
+      <field_c/>
+      <value_type>None</value_type>
+      <value_length>22</value_length>
+      <value_precision>2</value_precision>
+      <remove>N</remove>
+      <conversion_mask>0</conversion_mask>
+      <decimal_symbol/>
+      <grouping_symbol/>
+      <currency_symbol/>
+    </calculation>
+    <calculation>
+      <field_name>delayedminutes</field_name>
+      <calc_type>ROUND_STD_1</calc_type>
+      <field_a>delayedminutes</field_a>
+      <field_b/>
+      <field_c/>
+      <value_type>None</value_type>
+      <value_length>22</value_length>
+      <value_precision>3</value_precision>
+      <remove>N</remove>
+      <conversion_mask>0</conversion_mask>
+      <decimal_symbol/>
+      <grouping_symbol/>
+      <currency_symbol/>
+    </calculation>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1280</xloc>
+      <yloc>176</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>sort_to_group</name>
     <type>SortRows</type>
     <description/>
     <distribute>Y</distribute>
@@ -1118,14 +1251,6 @@ FROM maintenance</sql>
         <collator_strength>0</collator_strength>
         <presorted>N</presorted>
       </field>
-      <field>
-        <name>delaycode</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
     </fields>
     <attributes/>
     <cluster_schema/>
@@ -1136,14 +1261,14 @@ FROM maintenance</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>368</xloc>
-      <yloc>112</yloc>
+      <xloc>976</xloc>
+      <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>
   </step>
   <step>
-    <name>Merge join 2</name>
-    <type>MergeJoin</type>
+    <name>swap_rounded</name>
+    <type>SelectValues</type>
     <description/>
     <distribute>Y</distribute>
     <custom_distribution/>
@@ -1152,163 +1277,7 @@ FROM maintenance</sql>
       <method>none</method>
       <schema_name/>
     </partitioning>
-    <join_type>INNER</join_type>
-    <step1>Group by 2</step1>
-    <step2>Group by</step2>
-    <keys_1>
-      <key>aircraftid</key>
-      <key>timeid</key>
-      <key>delaycode</key>
-    </keys_1>
-    <keys_2>
-      <key>aircraftregistration</key>
-      <key>departure</key>
-      <key>delaycode</key>
-    </keys_2>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>640</xloc>
-      <yloc>144</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Sort rows 5</name>
-    <type>SortRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <directory>%%java.io.tmpdir%%</directory>
-    <prefix>out</prefix>
-    <sort_size>1000000</sort_size>
-    <free_memory/>
-    <compress>N</compress>
-    <compress_variable/>
-    <unique_rows>N</unique_rows>
     <fields>
-      <field>
-        <name>aircraftregistration</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-      <field>
-        <name>departure</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-      <field>
-        <name>delaycode</name>
-        <ascending>Y</ascending>
-        <case_sensitive>N</case_sensitive>
-        <collator_enabled>N</collator_enabled>
-        <collator_strength>0</collator_strength>
-        <presorted>N</presorted>
-      </field>
-    </fields>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>368</xloc>
-      <yloc>192</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Group by</name>
-    <type>GroupBy</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <all_rows>N</all_rows>
-    <ignore_aggregate>N</ignore_aggregate>
-    <field_ignore/>
-    <directory>%%java.io.tmpdir%%</directory>
-    <prefix>grp</prefix>
-    <add_linenr>N</add_linenr>
-    <linenr_fieldname/>
-    <give_back_row>N</give_back_row>
-    <group>
-      <field>
-        <name>aircraftregistration</name>
-      </field>
-      <field>
-        <name>departure</name>
-      </field>
-      <field>
-        <name>delaycode</name>
-      </field>
-    </group>
-    <fields>
-      <field>
-        <aggregate>duration</aggregate>
-        <subject>duration</subject>
-        <type>SUM</type>
-        <valuefield/>
-      </field>
-    </fields>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>480</xloc>
-      <yloc>192</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Group by 2</name>
-    <type>GroupBy</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <all_rows>N</all_rows>
-    <ignore_aggregate>N</ignore_aggregate>
-    <field_ignore/>
-    <directory>%%java.io.tmpdir%%</directory>
-    <prefix>grp</prefix>
-    <add_linenr>N</add_linenr>
-    <linenr_fieldname/>
-    <give_back_row>N</give_back_row>
-    <group>
       <field>
         <name>aircraftid</name>
       </field>
@@ -1316,21 +1285,128 @@ FROM maintenance</sql>
         <name>timeid</name>
       </field>
       <field>
-        <name>delaycode</name>
+        <name>scheduledOutOfService</name>
+        <length>22</length>
+        <precision>2</precision>
       </field>
-    </group>
+      <field>
+        <name>unScheduledOutOfService</name>
+        <length>22</length>
+        <precision>2</precision>
+      </field>
+      <field>
+        <name>flighthours_1</name>
+        <rename>flighthours</rename>
+        <length>22</length>
+        <precision>2</precision>
+      </field>
+      <field>
+        <name>flightcycles</name>
+        <length>22</length>
+        <precision>2</precision>
+      </field>
+      <field>
+        <name>delays</name>
+        <length>22</length>
+        <precision>2</precision>
+      </field>
+      <field>
+        <name>delayedminutes_1</name>
+        <rename>delayedMinutes</rename>
+        <length>22</length>
+        <precision>3</precision>
+      </field>
+      <field>
+        <name>cancellations</name>
+        <length>22</length>
+        <precision>2</precision>
+      </field>
+      <select_unspecified>N</select_unspecified>
+      <meta>
+        <name>aircraftid</name>
+        <rename>aircraftid</rename>
+        <type>String</type>
+        <length>6</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+      <meta>
+        <name>timeid</name>
+        <rename>timeid</rename>
+        <type>Date</type>
+        <length>7</length>
+        <precision>-2</precision>
+        <conversion_mask/>
+        <date_format_lenient>false</date_format_lenient>
+        <date_format_locale/>
+        <date_format_timezone/>
+        <lenient_string_to_number>false</lenient_string_to_number>
+        <encoding/>
+        <decimal_symbol/>
+        <grouping_symbol/>
+        <currency_symbol/>
+        <storage_type/>
+      </meta>
+    </fields>
+    <attributes/>
+    <cluster_schema/>
+    <remotesteps>
+      <input>
+      </input>
+      <output>
+      </output>
+    </remotesteps>
+    <GUI>
+      <xloc>1408</xloc>
+      <yloc>176</yloc>
+      <draw>Y</draw>
+    </GUI>
+  </step>
+  <step>
+    <name>turn_null_0</name>
+    <type>IfNull</type>
+    <description/>
+    <distribute>Y</distribute>
+    <custom_distribution/>
+    <copies>1</copies>
+    <partitioning>
+      <method>none</method>
+      <schema_name/>
+    </partitioning>
+    <replaceAllByValue>0</replaceAllByValue>
+    <replaceAllMask/>
+    <selectFields>Y</selectFields>
+    <selectValuesType>N</selectValuesType>
+    <setEmptyStringAll>N</setEmptyStringAll>
+    <valuetypes>
+      </valuetypes>
     <fields>
       <field>
-        <aggregate>delays</aggregate>
-        <subject>delays</subject>
-        <type>SUM</type>
-        <valuefield/>
+        <name>scheduledOutOfService</name>
+        <value>0</value>
+        <mask/>
+        <set_empty_string>N</set_empty_string>
       </field>
       <field>
-        <aggregate>delayedminutes</aggregate>
-        <subject>delayedminutes</subject>
-        <type>SUM</type>
-        <valuefield/>
+        <name>unScheduledOutOfService</name>
+        <value>0</value>
+        <mask/>
+        <set_empty_string>N</set_empty_string>
+      </field>
+      <field>
+        <name>delayedminutes</name>
+        <value>0</value>
+        <mask/>
+        <set_empty_string>N</set_empty_string>
       </field>
     </fields>
     <attributes/>
@@ -1342,103 +1418,8 @@ FROM maintenance</sql>
       </output>
     </remotesteps>
     <GUI>
-      <xloc>480</xloc>
-      <yloc>112</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Dummy (do nothing)</name>
-    <type>Dummy</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>736</xloc>
-      <yloc>144</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Filter rows</name>
-    <type>FilterRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <send_true_to>Sort rows 4</send_true_to>
-    <send_false_to/>
-    <compare>
-      <condition>
-        <negated>N</negated>
-        <leftvalue>delaycode</leftvalue>
-        <function>IS NOT NULL</function>
-        <rightvalue/>
-      </condition>
-    </compare>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>288</xloc>
-      <yloc>112</yloc>
-      <draw>Y</draw>
-    </GUI>
-  </step>
-  <step>
-    <name>Filter rows 2</name>
-    <type>FilterRows</type>
-    <description/>
-    <distribute>Y</distribute>
-    <custom_distribution/>
-    <copies>1</copies>
-    <partitioning>
-      <method>none</method>
-      <schema_name/>
-    </partitioning>
-    <send_true_to>Sort rows 5</send_true_to>
-    <send_false_to/>
-    <compare>
-      <condition>
-        <negated>N</negated>
-        <leftvalue>delaycode</leftvalue>
-        <function>IS NOT NULL</function>
-        <rightvalue/>
-      </condition>
-    </compare>
-    <attributes/>
-    <cluster_schema/>
-    <remotesteps>
-      <input>
-      </input>
-      <output>
-      </output>
-    </remotesteps>
-    <GUI>
-      <xloc>288</xloc>
-      <yloc>192</yloc>
+      <xloc>848</xloc>
+      <yloc>176</yloc>
       <draw>Y</draw>
     </GUI>
   </step>

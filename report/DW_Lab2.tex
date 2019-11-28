@@ -11,35 +11,43 @@
 \titleformat{\section}{\bf}{\thesection.}{1em}{}
 \titleformat{\subsection}{\bf}{\thesubsection.}{0.9em}{}
 
-\title{Data Warehousing: Lab 1 Multidimensional Modelling}
-\author{Maria Gkotsopoulou, Ricard Monge Calvo}
-\date{October 2019}
+\title{Data Warehousing: Lab 2 Extract-Transform-Load Design}
+\author{Javier Ferrando, Ricard Monge Calvo}
+\date{November 2019}
 
 \begin{document}
 
 \maketitle
 
-\section{Conceptual design}
+The aim of this exercise is to design an extract-transform-load process for the \textit{ACME-flying} use case.
 
-To design our multidimensional model we look at our sources (data driven approach): AIMS for flight data, cancellations and delays; and AMOS for maintenance and logbook data. In addition, we consider the KPIs that need to be served using the model (demand driven approach).
-\par
-We identify three main facts and model a star schema for each of them:
-\begin{itemize}
-    \item Flights details with departure date and plane as dimensions, with takeoffs, cancellation, duration and delay/delay\_duration as measures.
-    \item Maintenance events with its associated type (un/scheduled), date and plane as dimensions and duration as a measure.
-    \item Logs with each entry of the technical logbook with its associated personnel type, date and plane dimensions and count as a measure.
-\end{itemize}
+\section{Considerations}
 
-By assuming that each flight or maintenance fact will always have its associated log, and that cancelled or delayed flights also have an associated maintenance event, we conclude that the dates and planes dimensions of each fact have a large enough number of intersections and thus it is logical to join them, obtaining a constellation schema.
-\par
-On the other hand, since the finest granularity of our KPIS is day we aggregate all the information of our fact tables at the day level. This means that measures such as the flight's takeoffs, maintenance's duration or logs' counts are aggregates for a given day and a given plane, which we assume our ETL provides.
+First of all, we consider as fixed the structure of the target tables, provided in the problem statement. In that sense, we conform to the names, types, lengths and number precision of the target tables.
 
-\section{Materialized views}
+Moreover, we only consider the tables of AIMS and AMOS which provide the desired information to fulfill the target requirements. Accordingly, the data quality and robustness checks that we perform following to the business rules are only for the considered tables.
 
-First, we need to decide whether we would benefit from creating, if any, materialized views. Once we have written the queries needed to obtain all the KPIs specified (given our demand driven approach) we observe that there are some core similarities in terms of grouping attributes; namely month(or year) and aircraft (or model/ manufacturer). Specifically, we see a potential gain in creating materialized views for the KPIs associated with maintenance (ADOS, ADOSS, ADOSU and adding schedule\_type) and logs (RR, PRR, MR and adding personnel\_type). We consider that the tuple reduction of 365*\#aircrafts to 12*\#aircrafts is considerable and justifies the view creation.
+\section{Data quality}
 
-On the other hand, it is just FH (flight hours) and TO (flight cycles) that are required on a daily level but they can be queried directly from the table. However, for the flight KPIs (cancellation, delays, delay\_duration) we believe that we would obtain a significant tuple reduction by creating a view on a month aircraft level, as stated previously.
+Regarding the connection between \textit{Flights} and \textit{OperationInterruption}, we ensure that all maintenance events are correctly matched with its corresponding flight by the \textit{scheduledeparture} field, which we assume (and checked) is identical to the date specified in the \textit{flightID}; and by the \textit{aircraftRegistrationID} and \textit{delayCode}.
 
-In our materialized views query definition we specify the ENABLE QUERY REWRITE so that the system decides to run a query against a view instead of a table. Based on the assumption that our ETL will run daily and feed into our DW any past modifications or new data for a given day, we believe that the choice of incremental updates is to be preferred over a complete update. In particular, we use Oracle's FAST REFRESH ON COMMIT with the associated materialized view log on each table used in the view creation.
+Furthermore, we checked the expected length of each maintenance event according to its kind, and  observed that none of them fulfilled the expected duration. Thus, for the sake of the exercise we do not apply any action on this rule.
+
+In the case of the data quality of the flight information, we ensure that flights have a departure timestamp earlier than an arrival timestamp for both schedule and actual cases, by checking the differences of the \textit{scheduledeparture/arrival} and \textit{actualdeparture/arrival}. In addition, we checked that the consecutive time slots of a given airplane do not overlap, by checking that the arrival time of a slot happens earlier than the departure time of the next.
+
+Finally, although every \textit{Maintenance} that appears in AIMS has to appear in AMOS, we assume the reverse is not true and so we use the more complete tables in AMOS. 
+
+
+\section{Robustness}
+
+In order to achieve robustness in our ETL we impose a logical order in our job, by first checking the connections and existence of the tables/files, to then load the dimensions and end up with the facts.
+
+Furthermore, we ensure that the foreign keys in the fact tables are present in the dimensions, removing those that are not.
+
+Finally, we ensure that successive loads do not duplicate data or generate primary key violation errors, by checking changes and updating instead of inserting.
+
+\section{Instructions}
+
+To run the ETL process, one has to open the job named as $DW\_\_Lab2$ and execute it. This job first runs a $job_{check-input-outputs}$, then a $job_{dimensions}$ and finally, $job_{facts}$. Inside $job_{dimensions}$ we have a transformation for each dimension, respecting the order of loading first \textit{months} dimension and then \textit{temporaldimension} to ensure foreign key restrictions. Equally, inside $job_{facts}$ we have a transformation for each fact table.
 
 \end{document}
